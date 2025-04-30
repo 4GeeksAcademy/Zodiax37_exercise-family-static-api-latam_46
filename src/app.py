@@ -17,6 +17,26 @@ CORS(app)
 jackson_family = FamilyStructure("Jackson")
 
 
+member1 = {
+    "first_name": "John",
+    "age": 33,
+    "lucky_numbers": [7, 13, 22]
+}
+member2 = {
+    "first_name": "Jane",
+    "age": 35,
+    "lucky_numbers": [10, 14, 3]
+}
+member3 = {
+    "first_name": "Jimmy",
+    "age": 5,
+    "lucky_numbers": [1]
+}
+jackson_family.add_member(member1)
+jackson_family.add_member(member2)
+jackson_family.add_member(member3)
+
+
 # Handle/serialize errors like a JSON object
 @app.errorhandler(APIException)
 def handle_invalid_usage(error):
@@ -30,13 +50,37 @@ def sitemap():
 
 
 @app.route('/members', methods=['GET'])
-def handle_hello():
+def get_members():
     # This is how you can use the Family datastructure by calling its methods
     members = jackson_family.get_all_members()
-    response_body = {"hello": "world",
-                     "family": members}
-    return jsonify(response_body), 200
+    return (jsonify(members), 200)
 
+@app.route('/members', methods=['POST'])
+def post_member():
+    member = request.json
+    jackson_family.add_member(member)
+    return (member, 200)
+
+@app.route('/members/<int:id>', methods=["GET"])
+def get_member(id):
+    member = jackson_family.get_member(id)
+
+    if (member is not None):
+        return (member, 200)
+    return (jsonify({"error": "No se encontró al miembro especificado"}),404)
+
+
+@app.route('/members/<int:id>', methods=['DELETE'])
+def delete_member(id):
+    member = jackson_family.get_member(id)
+    if(member is not None):
+        jackson_family.delete_member(id)
+        return (jsonify({"done": 1, "removed_member": member}), 200)
+    return (jsonify({"error": "No se encontró al miembro especificado"}),404)
+
+    
+    
+        
 
 
 # This only runs if `$ python src/app.py` is executed
